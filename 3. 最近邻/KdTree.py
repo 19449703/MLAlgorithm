@@ -1,7 +1,10 @@
 import math
+import random
 from collections import namedtuple
 import matplotlib.pyplot as plt
 import numpy as np
+from mpl_toolkits.mplot3d import Axes3D
+
 
 # 支持中文
 plt.rcParams['font.sans-serif'] = ['SimHei']  # 用来正常显示中文标签
@@ -212,9 +215,9 @@ class KdTree(object):
             self._find_nearest(leaf, target, k_list, k)
 
 
-    def PlotKdTree(self, target, xmin, xmax, ymin, ymax, plotCoord=True, plot=True):
+    def PlotKdTree2D(self, target, xmin, xmax, ymin, ymax, plotCoord=True, plot=True):
         if len(self.data[0]) != 2:
-            pirnt("PlotKdTree2D只能绘制二维TdTree")
+            pirnt("PlotKdTree2D只能绘制二维数据")
             return
 
         x = [d[0] for d in self.data]
@@ -253,12 +256,88 @@ class KdTree(object):
             plt.show()
 
 
-    def PlotKdTreeWithKNearest(self, target, k_list, xmin, xmax, ymin, ymax, plotCoord=True, plot=True):
-        self.PlotKdTree(target, xmin, xmax, ymin, ymax, plotCoord, False)
+    def PlotKdTree2DWithKNearest(self, target, k_list, xmin, xmax, ymin, ymax, plotCoord=True, plot=True):
+        if len(self.data[0]) != 2:
+            pirnt("PlotKdTree2DWithKNearest只能绘制二维数据")
+            return
+            
+        self.PlotKdTree2D(target, xmin, xmax, ymin, ymax, plotCoord, False)
         
         for i in range(len(k_list)):
-            plt.scatter(k_list[i].dom_elt[0], k_list[i].dom_elt[1], color='black', marker='o', s=62)
             plt.annotate(str(i + 1), k_list[i].dom_elt, xytext=(15, -25), textcoords='offset pixels', color='blue', fontsize=12, arrowprops=dict(color='blue', arrowstyle="-"))
+
+        if plot:
+            plt.show()
+
+
+    def PlotKdTree3D(self, target, xmin, xmax, ymin, ymax, zmin, zmax, plot=True):
+        if len(self.data[0]) != 3:
+            pirnt("PlotKdTree3D只能绘制三维数据")
+            return
+
+        fig = plt.figure()
+        plt.rcParams['figure.figsize'] = (12, 10)
+
+        ax = plt.axes(projection='3d')
+
+        x = [d[0] for d in self.data]
+        y = [d[1] for d in self.data]
+        z = [d[2] for d in self.data]
+
+        ax.set_xlabel('X')
+        ax.set_ylabel('Y')
+        ax.set_zlabel('Z')
+        ax.set_xlim(xmin, xmax)
+        ax.set_ylim(ymin, ymax)
+        ax.set_zlim(zmin, zmax)
+        ax.scatter3D(x, y, z, cmap='b')
+        ax.scatter3D(target[0], target[1], target[2], cmap='r')
+        # ax.text(target[0], target[1], target[2], 'target', None, c='r')
+
+        def PlotPartition(node, xmin, xmax, ymin, ymax, zmin, zmax):
+            if node == None:
+                return
+            
+            if node.split == 0:
+                x = (node.dom_elt[0], node.dom_elt[0], node.dom_elt[0], node.dom_elt[0], node.dom_elt[0])
+                y = (ymin, ymax, ymax, ymin, ymin)
+                z = (zmin, zmin, zmax, zmax, zmin)
+                ax.plot(x, y, z, 'c--', linewidth=1)
+                PlotPartition(node.left, xmin, node.dom_elt[0], ymin, ymax, zmin, zmax)
+                PlotPartition(node.right, node.dom_elt[0], xmax, ymin, ymax, zmin, zmax)
+            elif node.split == 1:
+                x = (xmin, xmax, xmax, xmin, xmin)
+                y = (node.dom_elt[1], node.dom_elt[1], node.dom_elt[1], node.dom_elt[1], node.dom_elt[1])
+                z = (zmin, zmin, zmax, zmax, zmin)
+                ax.plot(x, y, z, 'c--', linewidth=1)
+                PlotPartition(node.left, xmin, xmax, ymin, node.dom_elt[1], zmin, zmax)
+                PlotPartition(node.right, xmin, xmax, node.dom_elt[1], ymax, zmin, zmax)
+            elif node.split == 2:
+                x = (xmin, xmax, xmax, xmin, xmin)
+                y = (ymin, ymin, ymax, ymax, ymin)
+                z = (node.dom_elt[2], node.dom_elt[2], node.dom_elt[2], node.dom_elt[2], node.dom_elt[2])
+                ax.plot(x, y, z, 'c--', linewidth=1)
+                PlotPartition(node.left, xmin, xmax, ymin, ymax, zmin, node.dom_elt[2])
+                PlotPartition(node.right, xmin, xmax, ymin, ymax, node.dom_elt[2], zmax)
+            
+
+        PlotPartition(self.root, xmin, xmax, ymin, ymax, zmin, zmax)
+
+        if plot:
+            plt.show()
+
+        return ax
+
+    def PlotKdTree3DWithKNearest(self, target, k_list, xmin, xmax, ymin, ymax, zmin, zmax, plot=True):
+        if len(self.data[0]) != 3:
+            pirnt("PlotKdTree3DWithKNearest只能绘制三维数据")
+            return
+            
+        ax = self.PlotKdTree3D(target, xmin, xmax, ymin, ymax, zmin, zmax, False)
+
+        for i in range(len(k_list)):
+            ax.text(k_list[i].dom_elt[0], k_list[i].dom_elt[1], k_list[i].dom_elt[2], str(i + 1), None)
+            # plt.annotate(str(i + 1), k_list[i].dom_elt, xytext=(15, -25), textcoords='offset pixels', color='blue', fontsize=12, arrowprops=dict(color='blue', arrowstyle="-"))
 
         if plot:
             plt.show()
@@ -271,3 +350,15 @@ class KdTree(object):
 # k_list = kd.search_k_nearest(targets[0], 1)
 # for node in k_list:
 #     print(node.dom_elt)
+
+
+xmax = 10
+ymax = 10
+zmax = 10
+# random.seed(100)
+data = [(random.uniform(1, xmax), random.uniform(1, ymax), random.uniform(1, zmax)) for i in range(10)]
+target = (random.uniform(1, xmax), random.uniform(1, ymax), random.uniform(1, zmax))
+
+kd = KdTree(data, 0)
+k_list = kd.search_k_nearest(target, 3) 
+kd.PlotKdTree3DWithKNearest(target, k_list, 0, xmax, 0, ymax, 0, zmax)
