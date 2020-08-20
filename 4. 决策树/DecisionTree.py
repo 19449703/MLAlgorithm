@@ -28,6 +28,14 @@ class DecisionTree:
                 return self.label
 
             key = data.loc[self.feature_name]
+
+            if key not in self.child:
+                # 对于数值型的key，找到值最相近的
+                keys = list(self.child.keys())
+                absv = [math.fabs(v - key) for v in keys]
+                minindex = absv.index(min(absv))
+                key = keys[minindex]
+
             return self.child[key].predict(data)
 
 
@@ -176,40 +184,47 @@ class DecisionTree:
         return result
 
 
+    def score(self, test_data):
+        y = test_data.iloc[:, -1].tolist()
+        pred = self.predict(test_data)
+        correct_num = sum([a[0] == a[1] for a in zip(y, pred)])
+        return correct_num / len(y)
+
+
 # test
 # 书上题目5.1
-def create_data():
-    datasets = [['青年', '否', '否', '一般', '否'],
-               ['青年', '否', '否', '好', '否'],
-               ['青年', '是', '否', '好', '是'],
-               ['青年', '是', '是', '一般', '是'],
-               ['青年', '否', '否', '一般', '否'],
-               ['中年', '否', '否', '一般', '否'],
-               ['中年', '否', '否', '好', '否'],
-               ['中年', '是', '是', '好', '是'],
-               ['中年', '否', '是', '非常好', '是'],
-               ['中年', '否', '是', '非常好', '是'],
-               ['老年', '否', '是', '非常好', '是'],
-               ['老年', '否', '是', '好', '是'],
-               ['老年', '是', '否', '好', '是'],
-               ['老年', '是', '否', '非常好', '是'],
-               ['老年', '否', '否', '一般', '否'],
-               ]
+# def create_data():
+#     datasets = [['青年', '否', '否', '一般', '否'],
+#                ['青年', '否', '否', '好', '否'],
+#                ['青年', '是', '否', '好', '是'],
+#                ['青年', '是', '是', '一般', '是'],
+#                ['青年', '否', '否', '一般', '否'],
+#                ['中年', '否', '否', '一般', '否'],
+#                ['中年', '否', '否', '好', '否'],
+#                ['中年', '是', '是', '好', '是'],
+#                ['中年', '否', '是', '非常好', '是'],
+#                ['中年', '否', '是', '非常好', '是'],
+#                ['老年', '否', '是', '非常好', '是'],
+#                ['老年', '否', '是', '好', '是'],
+#                ['老年', '是', '否', '好', '是'],
+#                ['老年', '是', '否', '非常好', '是'],
+#                ['老年', '否', '否', '一般', '否'],
+#                ]
 
-    labels = [u'年龄', u'有工作', u'有自己的房子', u'信贷情况', u'类别']
-    # 返回数据集和每个维度的名称
-    return datasets, labels
+#     labels = [u'年龄', u'有工作', u'有自己的房子', u'信贷情况', u'类别']
+#     # 返回数据集和每个维度的名称
+#     return datasets, labels
 
 
-datasets, labels = create_data()
-data_df = pd.DataFrame(datasets, columns=labels)
+# datasets, labels = create_data()
+# data_df = pd.DataFrame(datasets, columns=labels)
 
-dt = DecisionTree()
-tree = dt.fit(data_df)
-print(tree)
-pred = dt.predict(data_df)
-print(pred)
-print(data_df.iloc[:, -1].tolist())
+# dt = DecisionTree()
+# tree = dt.fit(data_df)
+# print(tree)
+# pred = dt.predict(data_df)
+# print(pred)
+# print(data_df.iloc[:, -1].tolist())
 
 
 # from sklearn.datasets import load_iris
@@ -222,22 +237,24 @@ print(data_df.iloc[:, -1].tolist())
 #     'sepal length', 'sepal width', 'petal length', 'petal width', 'label'
 # ]
 
-# df_train, df_test = train_test_split(df, test_size=0.3, random_state=999)
+# df_train, df_test = train_test_split(df, test_size=0.35, random_state=9)
 
 # data = np.array(df)
 # X, y = data[:, :-1], data[:, -1]
-# X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=999)
+# X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.35, random_state=9)
 
 # # scikit-learn实例
 # from sklearn.tree import DecisionTreeClassifier
 # from sklearn.tree import export_graphviz
 
-# clf = DecisionTreeClassifier()
+# clf = DecisionTreeClassifier('entropy')
 # print(clf.fit(X_train, y_train))
+# print(clf.predict(X_test))
 # print(clf.score(X_test, y_test))
 
 # print('---------------- 漂亮的分割线 ----------------')
 
 # dt = DecisionTree()
 # tree = dt.fit(df_train)
-# dt.predict(df_test)
+# print(dt.predict(df_test))
+# print(dt.score(df_test))
